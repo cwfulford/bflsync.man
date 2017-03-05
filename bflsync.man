@@ -1,0 +1,107 @@
+.TH BFLSYNC 8l "1 March r
+.SH NAME
+.B bflsync
+- use \fIrsync\fR to synchronise filesystems from \fBbelfields.belfld\fR to
+\fBbfl-uw.belfld.local.
+.SH SYNOPSIS
+\fBbflsync\fR [[\fB-c config\fR] [\fB-d\fR] [\fB-e <mail_address>\fR] [\fB-q\fR]]|[\fB-V\fR]|[\fB-s\fR]
+.SH AVAILABILITY
+.B bflsync
+is a Borne shell script which should work equally well on all versions of UNIX,
+Linux and Mac OS X.
+.SH DESCRIPTION
+.B bflsync
+reads the configuration file \fI/usr/local/etc/bflsync.cf\fR to determine 
+which file systems need to be synchronised. Each remote file system is 
+mounted using \fBNFS\fR  and a local synchronised copy taken. The file system
+is unmounted immediately after synchronisation.
+.LP
+The script pauses after each complete cycle for a period determined by the
+configuration file.
+.LP
+Logging is done to the file  \fI/var/log/bflsync#\fR where "#" is the number
+of the day in the week and Monday is designated day 1.
+.TP 5
+.B -c <config_file>
+Use \fIconfig_file\fR rather than the default configuration file \fI/usr/local/etc/bflsync.cf\fR.
+.TP 5
+.B -d
+Sets the debug option on. Every line of code is echoed to standard error 
+before being run.
+.TP 5
+.B -V
+Print the release details for the instance of bflsync run. 
+.TP 5
+.B -s
+Print the current config to standard out and quit.
+.LP
+The script is designed to work as a daemon process and should always be started
+with the \fIinit\r script. Other options to the \fIinit\fR script are:
+.TP 5
+.B start
+The script is started in quiet mode.  
+.TP 5
+.B monitor
+The script is started in verbose mode. The output to standard error will be 
+redirected to \fI/var/log/bflsync\fR.
+.TP 5
+.B stop 
+Signal 15 is sent to the \fBbflsync\fR process. The signal is trapped and the
+script waits until the current filesystem synchronisation is complete before 
+it terminates. It may be over an hour before termination, if the file system is 
+"\fBdatac\fR" and the synchronisation has only just started.
+.TP
+.B halt 
+This option should be avoided if at all possible. Signal 9 is sent to the
+running script process. An attempt will be made to stop the associated 
+\fBrsync\fR processes but this cannot be guaranteed and the result may be
+messy. The lock file will be left in place. It is incumbent on the user to
+remove the lockfile and ensure all existing rsync processes are terminated
+before recommencing operations.
+.TP
+.B reload
+Signal 1 is sent to the running bflsync process. The signal is trapped until
+the current rsync is complete, the script then read reads the configuration file
+before starting synchronisation of the next filesystem.
+.TP
+.B remonitor
+Signal 15 will sent as \fBrestart\fR below but when restarted the script will 
+be in verbose mode and the output to standard error will be redirected to 
+\fI/var/lob/bflsync.out\fR.
+.TP
+.B restart 
+Signal 15 will be sent, as in \fBstop\fR above but the init script will
+then wait until the \fIlock\fR is removed and then  attempt to restart
+\fBbflsync\fR.
+.SH EXAMPLES
+.IP
+.ft CW
+/etc/init.d/bflsync start
+.ft R
+.LP
+If there is no existing lockfile start  \fBbflsync 
+.IP
+.ft CW 
+/etc/init.d/bflsync stop
+.ft R
+.LP
+Stop the running instance of bflsync as the earliest opportunity.
+.IP
+.ft CW
+/etc/init.d/bflsync reload
+.ft R
+Signal the running instance of bflsync to re-read the configuration file
+as soon as possible.
+
+.SH FILES
+.IR /etc/init.d/bflsync ,
+.IR /usr/local/etc/bflsync.cf
+.IR /var/log/bflsync[0-6]
+.IR /var/run/bflsync
+
+.SH BUGS
+Halting bflsync has unpredictable results.
+.SH AUTHOR
+Clifford W Fulford, City Linux. Contact fulford@citylinux.com or +44 (0)793 572 8612
+.SH HISTORY
+$Id: bflsync.man,v 1.10 2017/03/05 12:19:57 fulford Exp fulford $
